@@ -750,9 +750,7 @@ const Dao = {
     }
     // 连表结束-----------------------------------------------------------
     // 获取结果
-    // return 111
-    
-    
+
     result = await result.end();
     let rows: any = result.data;
     for (const i in rows) {
@@ -767,38 +765,36 @@ const Dao = {
         }
       }
     }
-
-    //去掉都为 [] 的了连表数据
+   
     for (const ii in rows) {
       for (const jj in foreignDB) {
         const { as }: { as?: any } = foreignDB[jj];
         if (Array.isArray(rows[ii][as]) && rows[ii][as].length === 0) {
+           //去掉都为 [] 的了连表数据
           delete result.data[ii][as];
+        } else {
+          rows = rows.filter((data: any) => {
+            var NeedDelNum = [];
+            for (let iii in ass) {
+              let as = ass[iii];
+              if (data[as].length == 0) {
+                NeedDelNum.push(iii);
+              }
+              if (NeedDelNum.length == ass.length) {
+                return false;
+              }
+            }
+            return true;
+          });
         }
       }
     }
-    rows = rows.filter((data: any) => {
-      var NeedDelNum = [];
-      for (let iii in ass) {
-        let as = ass[iii];
-        if (data[as].length == 0) {
-          NeedDelNum.push(iii);
-        }
-        if (NeedDelNum.length == ass.length) {
-          return false;
-        }
-      }
-      return true;
-    });
     ass = [];
     res.code = 0;
     if (getCount) {
       res.hasMore = hasMore;
       res.total = total;
-    } else {
-      res.total = rows ? rows.length : 0;
-      res.hasMore = total >= pageSize;
-    }
+    } 
     res.rows = rows; // 两表连接合并后的数据
     return res;
     // 数据库 API 结束----------------------------------------------------------

@@ -26,8 +26,8 @@ interface ForeignDB {
   foreignKey: string;
   localKey: string;
   localKeyType?: string;
-  as?: string;
-  limit?: number;
+  as: string;
+  limit: number;
   whereJson?: object;
   fieldJson?: object;
   sortArr?: Array<{ name: string; type?: string }>;
@@ -619,6 +619,8 @@ const Dao = {
     sortArr = [],
     fieldJson = {},
     foreignDB = [],
+    lastWhereJson = {},
+    lastSortArr = []
   }: {
     dbName: string;
     whereJson?: object;
@@ -628,6 +630,8 @@ const Dao = {
     sortArr?: Array<object>;
     fieldJson?: object;
     foreignDB?: ForeignDB[];
+    lastWhereJson?: object;
+    lastSortArr?: Array<object>;
   }) {
     // 获取全部的 as
     let ass: any = [];
@@ -745,12 +749,34 @@ const Dao = {
         pipeline: pipelineJson,
         as: as,
       };
-      console.log(111,lookupJson);
       result = result.lookup(lookupJson);
     }
     // 连表结束-----------------------------------------------------------
+    
+    // 处理 lastWhereJson
+    if (lastWhereJson && JSON.stringify(lastWhereJson) !== "{}") {
+        result = result.match(lastWhereJson);
+    }
+    
+    // 在此处添加 lastSortArr 的处理
+    // lastSortArr 排序规则
+    if (lastSortArr && JSON.stringify(lastSortArr) !== "[]") {
+      const sortJson: any = {};
+      for (const i in lastSortArr) {
+        const sortItem: any = lastSortArr[i];
+        const name = sortItem.name; 
+        let type: any = sortItem.type;
+        if (type === undefined || type === "" || type === "asc") {
+          type = 1; // 升序
+        } else {
+          type = -1; // 降序
+        }
+        sortJson[name] = type;
+      }
+      result = result.sort(sortJson);
+    }
+    
     // 获取结果
-
     result = await result.end();
     let rows: any = result.data;
     for (const i in rows) {
